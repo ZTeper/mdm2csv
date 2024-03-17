@@ -1,8 +1,22 @@
 
 # Zachary Teper
-# March 16, 2024
+# March 17, 2024
 
-import csv
+class dataBase:
+  columns = []
+  iccap_vars = {}
+  dataRows = []
+
+  def __init__(self, columns=[], iccap_vars={}, dataRows=[]):
+    self.columns = []
+    self.iccap_vars = {}
+    self.dataRows = []
+
+  def clear(self):
+    self.columns = []
+    self.iccap_vars = {}
+    self.dataRows = []
+    
 
 inputFileName = input("MDM file name (*.mdm file extension): ")
 inputFile = open(inputFileName, 'r')
@@ -12,20 +26,6 @@ inputFile.close()
 print("Parsing input file...")
 
 # Parse input file
-header = []
-try:
-  headerStartIndex = fileLines.index("BEGIN_HEADER")
-  headerEndIndex   = fileLines.index("END_HEADER")
-  headerLines = fileLines[headerStartIndex+1 : headerEndIndex-1]
-except ValueError:
-  print("ERROR: missing header")
-  exit()
-
-for line in headerLines:
-  if not line: # Skip blank lines
-    continue
-  header.append([line.split()])
-
 dataBaseList = []
 dataBaseStartIndex = 0
 dataBaseEndIndex   = 0
@@ -41,14 +41,26 @@ while True:
     else:
       break
 
-  dataBase = []
+  db = dataBase()
+  db.clear()
   for line in dataBaseLines:
     if not line: # Skip blank lines
       continue
-    dataBase.append([line.split()])
-  dataBaseList.append(dataBase)
+
+    # Process the line
+    words = line.split()
+    if words[0] == "ICCAP_VAR": # ICCAP variables
+      db.iccap_vars[words[1]] = words[2]
+    elif words[0][0] == '#': # title row
+      words[0] = words[0][1:] # Remove initial '#'
+      db.columns = words + list(db.iccap_vars.keys())
+    else: # data row
+      db.dataRows.append(words + list(db.iccap_vars.values()))
+
+  dataBaseList.append(db)
 
 print("Done parsing input")
+print(len(dataBaseList), " databases detected")
 
 outputFileName = input("CSV file name (*.csv file extension): ")
 outputFile = open(outputFileName, 'w')
@@ -56,18 +68,16 @@ outputFile = open(outputFileName, 'w')
 print("Writing output file...")
 
 # Write output file
-for line in header:
-  for word in line[0]:
-    outputFile.write(word + ',')
-  outputFile.write('\n')
 
+# write the columns; assume all databases have the same columns
+for column in dataBaseList[0].columns:
+  outputFile.write(column + ',')
+outputFile.write('\n')
 
-for dataBase in dataBaseList:
-  outputFile.write('\n')
-  for line in dataBase:
-    for word in line[0]:
-      if word[0] == '#': # Remove initial '#'
-        word = word[1:]
+# write the data rows
+for db in dataBaseList:
+  for row in db.dataRows:
+    for word in row:
       outputFile.write(word + ',')
     outputFile.write('\n')
 
