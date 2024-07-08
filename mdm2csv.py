@@ -60,7 +60,6 @@ while True:
       words[0] = words[0][1:] # Remove initial '#'
       words = [word.replace(',','_') for word in words]
       db.columns = words + list(db.iccap_vars.keys())
-      print(db.columns)
     else: # data row
       db.dataRows.append(words + list(db.iccap_vars.values()))
 
