@@ -1,6 +1,8 @@
 
 # Zachary Teper
-# March 17, 2024
+# This program reads an MDM database file (produced by Keysight ICCAP), and converts
+#     it into a CSV text database that can be processed by spreadsheet software,
+#     numpy, etc.
 
 class dataBase:
   columns = []
@@ -19,6 +21,9 @@ class dataBase:
     
 
 inputFileName = input("MDM file name (*.mdm file extension): ")
+if not inputFileName:
+  print("ERROR: no input file")
+  exit()
 inputFile = open(inputFileName, 'r')
 fileLines = [line.rstrip() for line in inputFile]
 inputFile.close()
@@ -53,7 +58,9 @@ while True:
       db.iccap_vars[words[1]] = words[2]
     elif words[0][0] == '#': # title row
       words[0] = words[0][1:] # Remove initial '#'
+      words = [word.replace(',','_') for word in words]
       db.columns = words + list(db.iccap_vars.keys())
+      print(db.columns)
     else: # data row
       db.dataRows.append(words + list(db.iccap_vars.values()))
 
@@ -63,6 +70,9 @@ print("Done parsing input")
 print(len(dataBaseList), " databases detected")
 
 outputFileName = input("CSV file name (*.csv file extension): ")
+if not outputFileName:
+  print("ERROR: no output file")
+  exit()
 outputFile = open(outputFileName, 'w')
 
 print("Writing output file...")
